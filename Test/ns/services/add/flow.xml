@@ -48,6 +48,9 @@
       </record>
     </array>
     <value name="modifiable">true</value>
+	<value name="modifiable">true</value>
+	<value name="modifiable">true</value>
+	<value name="modifiable">true</value>
   </record>
 </Values>
 </MAPTARGET>
