@@ -4,7 +4,8 @@ pipeline {
         gitParameter(name: 'BRANCH', defaultValue: 'main', type: 'BRANCH', branchFilter: 'origin/(.*)')
         string(name: 'PACKAGE_LIST_PATH', defaultValue: 'C:\\project\\repo\\CICDDemo\\config', description: 'Please enter the entire packageList file path.')
         string(name: 'PACKAGE_LIST_NAME', defaultValue: 'PackageList.txt', description: 'Please enter the Package List file name.')
-        
+        string(name: 'HEAD_TRACE_NUMBER', defaultValue: '1', description: 'Please enter the trace number of header, sample: 1,2,3.')
+
     }
     stages {
         stage('Checkout') {
@@ -23,7 +24,7 @@ pipeline {
         stage('Find Changes') {
             steps {
                 script {
-                    def changedFilesCmd = 'cmd /c "git diff --name-only HEAD HEAD~2"'
+                    def changedFilesCmd = 'cmd /c "git diff --name-only HEAD HEAD~${HEAD_TRACE_NUMBER}"'
                     def changedFiles = powershell(returnStdout: true, script: """& ${changedFilesCmd}""").trim()
                     def outputFile = "${params.PACKAGE_LIST_PATH}/${params.PACKAGE_LIST_NAME}"
                     dir(params.PACKAGE_LIST_PATH) {
