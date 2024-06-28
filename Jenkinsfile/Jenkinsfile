@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+    parameters {
+        gitParameter(name: 'BRANCH', defaultValue: 'main', type: 'BRANCH', branchFilter: 'origin/(.*)')
+        string(name: 'PACKAGE_LIST_PATH', defaultValue: 'C:\\project\\repo\\CICDDemo\\config', description: 'Please enter the entire packageList file path.')
+        string(name: 'PACKAGE_LIST_NAME', defaultValue: 'PackageList.txt', description: 'Please enter the Package List file name.')
+        
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "*/${params.BRANCH}"]],
+                        extensions: [cleanBeforeCheckout(deleteUntrackedNestedRepositories: true)],
+                        gitTool: 'Default',
+                        userRemoteConfigs: [[credentialsId: 'aed818f8-684e-4616-a429-a8aa5186d90d', url: 'https://github.com/chenweixan/IS']]
+                    ])
+                }
+            }
+        }
+        stage('Find Changes') {
+            steps {
+                script {
+                    def changedFilesCmd = 'cmd /c "git diff --name-only HEAD HEAD~2"'
+                    def changedFiles = powershell(returnStdout: true, script: """& ${changedFilesCmd}""").trim()
+                    def outputFile = "${params.PACKAGE_LIST_PATH}/${params.PACKAGE_LIST_NAME}"
+                    dir(params.PACKAGE_LIST_PATH) {
+                       writeFile encoding: 'UTF-8', text: changedFiles, file: params.PACKAGE_LIST_NAME
+                    }
+                    echo "Changed files:"
+                    echo "${changedFiles}, file location: ${outputFile}."
+                }
+            }
+        }
+    }
+}
