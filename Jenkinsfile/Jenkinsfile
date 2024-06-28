@@ -24,7 +24,7 @@ pipeline {
         stage('Find Changes') {
             steps {
                 script {
-                    def changedFilesCmd = 'cmd /c "git diff --name-only HEAD HEAD~${HEAD_TRACE_NUMBER}"'
+                    def changedFilesCmd = 'cmd /c "git diff --name-only HEAD HEAD~${params.HEAD_TRACE_NUMBER}"'
                     def changedFiles = powershell(returnStdout: true, script: """& ${changedFilesCmd}""").trim()
                     def outputFile = "${params.PACKAGE_LIST_PATH}/${params.PACKAGE_LIST_NAME}"
                     dir(params.PACKAGE_LIST_PATH) {
