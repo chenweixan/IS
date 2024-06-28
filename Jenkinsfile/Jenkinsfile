@@ -5,6 +5,7 @@ pipeline {
         string(name: 'PACKAGE_LIST_PATH', defaultValue: 'C:\\project\\repo\\CICDDemo\\config', description: 'Please enter the entire packageList file path.')
         string(name: 'PACKAGE_LIST_NAME', defaultValue: 'PackageList.txt', description: 'Please enter the Package List file name.')
         string(name: 'HEAD_TRACE_NUMBER', defaultValue: '1', description: 'Please enter the trace number of header, sample: 1,2,3.')
+		string(name: 'BUILD_VERSION', defaultValue: '1301', description: 'Please enter the build version.')
 
     }
     stages {
@@ -24,7 +25,8 @@ pipeline {
         stage('Find Changes') {
             steps {
                 script {
-                    def changedFilesCmd = 'cmd /c "git diff --name-only HEAD HEAD~${params.HEAD_TRACE_NUMBER}"'
+                    def changedFilesCmd = 'cmd /c "git diff --name-only HEAD HEAD~'
+					changedFilesCmd = "${changedFilesCmd}${params.HEAD_TRACE_NUMBER}\""
 					echo "${changedFilesCmd}"
                     def changedFiles = powershell(returnStdout: true, script: """& ${changedFilesCmd}""").trim()
                     def outputFile = "${params.PACKAGE_LIST_PATH}/${params.PACKAGE_LIST_NAME}"
@@ -33,6 +35,33 @@ pipeline {
                     }
                     echo "Changed files:"
                     echo "${changedFiles}, file location: ${outputFile}."
+                }
+            }
+        }
+		stage('Build') {
+            steps {
+                script {
+						bat """
+							%SAG_INSTALL_DIR%/common/AssetBuildEnvironment/bin/build.bat -Dbuild.output.dir=C:/project/repo/builds -Dbuild.source.dir=%WORKSPACE% -Denable.build.IS=true
+						"""
+                }
+            }
+        }
+		stage('Generate The Project Automator template File') {
+            steps {
+                script {
+						bat """
+							java -Dconfig.file.path=C:\\project\\repo\\CICDDemo\\config\\config.cnf -jar C:\\project\\xml-tool-1.0-SNAPSHOT-jar-with-dependencies.jar C:\\project\\repo\\CICDDemo\\config\\PackageList.txt C:\\project\\repo\\CICDDemo\\config\\ProjectAutomator_NonProd.xml ENV_SIT %BUILD_VERSION%
+						"""
+                }
+            }
+        }
+		stage('Populate The Project Automator File with details') {
+            steps {
+                script {
+						bat """
+							%SAG_INSTALL_DIR%/common/lib/ant/bin/ant.bat -f C:/project/repo/CICDDemo/config/UpdateAutomator_NonProd.xml -Dbuild.version=%BUILD_VERSION%
+						"""
                 }
             }
         }
