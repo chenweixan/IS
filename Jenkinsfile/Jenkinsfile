@@ -6,6 +6,7 @@ pipeline {
         string(name: 'PACKAGE_LIST_NAME', defaultValue: 'PackageList.txt', description: 'Please enter the Package List file name.')
         string(name: 'HEAD_TRACE_NUMBER', defaultValue: '1', description: 'Please enter the trace number of header, sample: 1,2,3.')
 		string(name: 'BUILD_VERSION', defaultValue: '1301', description: 'Please enter the build version.')
+		string(name: 'PROJECT_NAME', defaultValue: '<PROJECT_NAME>', description: 'Please provide the project name which need to be created in deployer.')
 
     }
     stages {
@@ -51,7 +52,7 @@ pipeline {
             steps {
                 script {
 						bat """
-							java -Dconfig.file.path=C:\\project\\repo\\CICDDemo\\config\\config.cnf -jar C:\\project\\xml-tool-1.0-SNAPSHOT-jar-with-dependencies.jar C:\\project\\repo\\CICDDemo\\config\\PackageList.txt C:\\project\\repo\\CICDDemo\\config\\ProjectAutomator_NonProd.xml ENV_SIT %BUILD_VERSION%
+							java -Dconfig.file.path=C:\\project\\repo\\CICDDemo\\config\\config.cnf -jar C:\\project\\xml-tool-1.0-SNAPSHOT-jar-with-dependencies.jar C:\\project\\repo\\CICDDemo\\config\\PackageList.txt C:\\project\\repo\\CICDDemo\\config\\ProjectAutomator_NonProd.xml ENV_UAT %BUILD_VERSION% %PROJECT_NAME%
 						"""
                 }
             }
@@ -61,6 +62,24 @@ pipeline {
                 script {
 						bat """
 							%SAG_INSTALL_DIR%/common/lib/ant/bin/ant.bat -f C:/project/repo/CICDDemo/config/UpdateAutomator_NonProd.xml -Dbuild.version=%BUILD_VERSION%
+						"""
+                }
+            }
+        }
+		stage('Create the deployment project') {
+            steps {
+                script {
+						bat """
+							%WM_DEPLOYER_DIR%/bin/projectautomator.bat C:/project/repo/CICDDemo/config/ProjectAutomator_NonProd_%BuildVersion%.xml
+						"""
+                }
+            }
+        }
+        stage('Deploy the project') {
+            steps {
+                script {
+						bat """
+							%WM_DEPLOYER_DIR%/bin/Deployer.bat --deploy -dc myDeployment -project %PROJECT_NAME% -host %IS_HOST% -port %IS_PORT% -user %IS_USER_NAME% -pwd %IS_USER_PWD% -reportFilePath /data/sag/repo/deploymentLogs
 						"""
                 }
             }
