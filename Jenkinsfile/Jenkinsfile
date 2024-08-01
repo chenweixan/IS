@@ -70,7 +70,7 @@ pipeline {
             steps {
                 script {
 						bat """
-							%WM_DEPLOYER_DIR%/bin/projectautomator.bat C:/project/repo/CICDDemo/config/ProjectAutomator_NonProd_%BuildVersion%.xml
+							%WM_DEPLOYER_DIR%/bin/projectautomator.bat C:/project/repo/CICDDemo/config/ProjectAutomator_NonProd_%BUILD_VERSION%.xml
 						"""
                 }
             }
